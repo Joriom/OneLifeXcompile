@@ -1,1 +1,1 @@
-rsync -vr --exclude='applyLocalRequirements.sh' . ..
+rsync -vr --exclude='applyLocalRequirements.sh' --exclude='.git' --exclude='.git/*' . ..
