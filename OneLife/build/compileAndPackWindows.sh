@@ -7,8 +7,8 @@ if [ $# -lt 1 ] ; then
 fi
 
 echo
-echo "Make sure to git pull both minorGems and OneLife"
-echo "Also pull OneLifeData7, but then run:   git checkout OneLife_v20"
+echo "Make sure to git pull all the components"
+#echo "Also pull OneLifeData7, but then run:   git checkout OneLife_v20"
 echo
 echo -n "Press ENTER when done."
 
@@ -40,7 +40,7 @@ cd windows
 
 echo
 echo "Done."
-echo "Don't forget to run  'git checkout master'   in OneLifeData7."
+#echo "Don't forget to run  'git checkout master'   in OneLifeData7."
 
 
 
