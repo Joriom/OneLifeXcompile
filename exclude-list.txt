@@ -1,0 +1,6 @@
+/*.sh
+.git
+.git/
+/exclude-list.txt
+game.cpp
+LivingLifePage.cpp

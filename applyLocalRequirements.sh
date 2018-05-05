@@ -1,1 +1,1 @@
-rsync -vr --exclude='/*.sh' --exclude='.git' --exclude='.git/*' . ..
+rsync -vr --exclude-from 'exclude-list.txt' . ..
