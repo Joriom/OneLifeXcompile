@@ -1,4 +1,4 @@
-int versionNumber = 78;
+int versionNumber = 90;
 int dataVersionNumber = 0;
 
 // NOTE that OneLife doesn't use account hmacs
@@ -145,8 +145,9 @@ doublePair lastScreenViewCenter = {0, 0 };
 
 
 // world width of one view
-double viewWidth = 2560; //default value 1280
-double viewHeight = 1440; //default value 720
+// FOVMOD NOTE: change 1/1 - take those lines during merge process
+double viewWidth = 1280 * fovmod::scale;
+double viewHeight = 720 * fovmod::scale;
 
 
 

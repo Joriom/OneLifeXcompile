@@ -45,6 +45,7 @@
 #define MAP_D 64
 #define MAP_NUM_CELLS 4096
 
+
 extern int versionNumber;
 extern int dataVersionNumber;
 
@@ -1633,21 +1634,23 @@ LivingLifePage::LivingLifePage()
     
     mSayField.unfocus();
     
-    
+    // FOVMOD NOTE: change 1/15 - take those lines during merge process
     mNotePaperHideOffset.x = -242;
-    mNotePaperHideOffset.y = -420;
+    mNotePaperHideOffset.y = -420 - fovmod::gui_offset_y;
 
-
+    // FOVMOD NOTE: change 2/15 - take those lines during merge process
     mHomeSlipHideOffset.x = 0;
-    mHomeSlipHideOffset.y = -360;
+    mHomeSlipHideOffset.y = -360 - fovmod::gui_offset_y;
 
 
     for( int i=0; i<3; i++ ) {    
         mHungerSlipShowOffsets[i].x = -540;
-        mHungerSlipShowOffsets[i].y = -250;
+        // FOVMOD NOTE: change 3/15 - take those lines during merge process
+        mHungerSlipShowOffsets[i].y = -250 - fovmod::gui_offset_y;
     
         mHungerSlipHideOffsets[i].x = -540;
-        mHungerSlipHideOffsets[i].y = -370;
+        // FOVMOD NOTE: change 4/15 - take those lines during merge process
+        mHungerSlipHideOffsets[i].y = -370 - fovmod::gui_offset_y;
         
         mHungerSlipWiggleTime[i] = 0;
         mHungerSlipWiggleAmp[i] = 0;
@@ -1684,8 +1687,9 @@ LivingLifePage::LivingLifePage()
         mHintSheetSprites[i] = loadSprite( name, false );
         delete [] name;
         
-        mHintHideOffset[i].x = 900;
-        mHintHideOffset[i].y = -370;
+        // FOVMOD NOTE: change 5/15 - take those lines during merge process
+        mHintHideOffset[i].x = 900 + fovmod::gui_offset_x;
+        mHintHideOffset[i].y = -370 - fovmod::gui_offset_y;
         
         mHintTargetOffset[i] = mHintHideOffset[i];
         mHintPosOffset[i] = mHintHideOffset[i];
@@ -3387,9 +3391,9 @@ void LivingLifePage::drawHungerMaxFillLine( doublePair inAteWordsPos,
                                             char inSkipDashes ) {
     
     
-    
+    // FOVMOD NOTE: change 6/15 - take those lines during merge process
     doublePair barPos = { lastScreenViewCenter.x - 590, 
-                          lastScreenViewCenter.y - 334 };
+                          lastScreenViewCenter.y - 334 - fovmod::gui_offset_y };
     barPos.x -= 12;
     barPos.y -= 10;
     
@@ -3600,13 +3604,19 @@ void LivingLifePage::draw( doublePair inViewCenter,
     int gridCenterY = 
         lrintf( lastScreenViewCenter.y / CELL_D ) - mMapOffsetY + mMapD/2;
     
+    // FOVMOD NOTE: change 7/15 - take those lines during merge process
+    // SIDE NOTE: Those four variables describe how far items should be rendered
+    // Its independent from biome drawing.
+
     // more on left and right of screen to avoid wide object tops popping in
-    int xStart = gridCenterX - 7;
-    int xEnd = gridCenterX + 7;
+    // SIDE NOTE: x is scaled directly. value * scale
+    int xStart = gridCenterX - (int)(ceil(7 * fovmod::scale));
+    int xEnd = gridCenterX + (int)(ceil(7 * fovmod::scale));
 
     // more on bottom of screen so that tall objects don't pop in
-    int yStart = gridCenterY - 6;
-    int yEnd = gridCenterY + 4;
+    // SIDE NOTE: y is scaled with offset.
+    int yStart = gridCenterY - (int)(ceil(5 * fovmod::scale) + 1);   // Default: 6  (5 * scale + 1)
+    int yEnd = gridCenterY + (int)(ceil(5 * fovmod::scale) - 1);     // Default: 4   (5 * scale - 1)
 
     if( xStart < 0 ) {
         xStart = 0;
@@ -3648,11 +3658,13 @@ void LivingLifePage::draw( doublePair inViewCenter,
     // tiles drawn on top).  However, given that we're not drawing anything
     // else out there, this should be okay from a performance standpoint.
 
-    int yStartFloor = gridCenterY - 4;
-    int yEndFloor = gridCenterY + 3;
+    // FOVMOD NOTE: change 8/15 - take those lines during merge process
+    // Those variables controll the ground (biome) display
+    int yStartFloor = gridCenterY - (int)(ceil(3 * fovmod::scale)+1);
+    int yEndFloor = gridCenterY + (int)(ceil(3 * fovmod::scale));
 
-    int xStartFloor = gridCenterX - 5;
-    int xEndFloor = gridCenterX + 6;
+    int xStartFloor = gridCenterX - (int)(ceil(5 * fovmod::scale));
+    int xEndFloor = gridCenterX + (int)(ceil(5 * fovmod::scale)+1);
 
     
 
@@ -6002,7 +6014,8 @@ void LivingLifePage::draw( doublePair inViewCenter,
     // info panel at bottom
     setDrawColor( 1, 1, 1, 1 );
     doublePair panelPos = lastScreenViewCenter;
-    panelPos.y -= 242 + 32 + 16 + 6;
+    // FOVMOD NOTE: change 9/15 - take those lines during merge process
+    panelPos.y -= 242 + 32 + 16 + 6 + fovmod::gui_offset_y;
     drawSprite( mGuiPanelSprite, panelPos );
 
     if( ourLiveObject != NULL &&
@@ -6022,8 +6035,9 @@ void LivingLifePage::draw( doublePair inViewCenter,
         toggleMultiplicativeBlend( true );
 
         for( int i=0; i<ourLiveObject->foodCapacity; i++ ) {
+            // FOVMOD NOTE: change 10/15 - take those lines during merge process 
             doublePair pos = { lastScreenViewCenter.x - 590, 
-                               lastScreenViewCenter.y - 334 };
+                               lastScreenViewCenter.y - 334 - fovmod::gui_offset_y};
         
             pos.x += i * 30;
             drawSprite( 
@@ -6043,8 +6057,9 @@ void LivingLifePage::draw( doublePair inViewCenter,
             }
         for( int i=ourLiveObject->foodCapacity; 
              i < ourLiveObject->maxFoodCapacity; i++ ) {
+            // FOVMOD NOTE: change 11/15 - take those lines during merge process
             doublePair pos = { lastScreenViewCenter.x - 590, 
-                               lastScreenViewCenter.y - 334 };
+                               lastScreenViewCenter.y - 334 - fovmod::gui_offset_y };
             
             pos.x += i * 30;
             drawSprite( 
@@ -6060,9 +6075,9 @@ void LivingLifePage::draw( doublePair inViewCenter,
         
         
                 
-        
+        // FOVMOD NOTE: change 12/15 - take those lines during merge process
         doublePair pos = { lastScreenViewCenter.x + 546, 
-                           lastScreenViewCenter.y - 319 };
+                           lastScreenViewCenter.y - 319 - fovmod::gui_offset_y};
 
         if( mCurrentArrowHeat != -1 ) {
             
@@ -6123,8 +6138,9 @@ void LivingLifePage::draw( doublePair inViewCenter,
         
 
         for( int i=0; i<mOldDesStrings.size(); i++ ) {
+            // FOVMOD NOTE: change 13/15 - take those lines during merge process
             doublePair pos = { lastScreenViewCenter.x, 
-                               lastScreenViewCenter.y - 313 };
+                               lastScreenViewCenter.y - 313 - fovmod::gui_offset_y};
             float fade =
                 mOldDesFades.getElementDirect( i );
             
@@ -6133,9 +6149,9 @@ void LivingLifePage::draw( doublePair inViewCenter,
                 mOldDesStrings.getElementDirect( i ), pos, alignCenter );
             }
 
-
+        // FOVMOD NOTE: change 14/15 - take those lines during merge process
         doublePair atePos = { lastScreenViewCenter.x, 
-                              lastScreenViewCenter.y - 347 };
+                              lastScreenViewCenter.y - 347 - fovmod::gui_offset_y};
         
         int shortestFill = 100;
         
@@ -6218,9 +6234,9 @@ void LivingLifePage::draw( doublePair inViewCenter,
                 }
 
             
-            
+            // FOVMOD NOTE: change 15/15 - take those lines during merge process
             doublePair pos = { lastScreenViewCenter.x, 
-                               lastScreenViewCenter.y - 313 };
+                               lastScreenViewCenter.y - 313 - fovmod::gui_offset_y};
 
             char *des = NULL;
             char *desToDelete = NULL;
@@ -6569,6 +6585,13 @@ static char isFood( int inID ) {
 
 static char getTransHintable( TransRecord *inTrans ) {
 
+    if( inTrans->lastUseActor ) {
+        return false;
+        }
+    if( inTrans->lastUseTarget ) {
+        return false;
+        }
+    
     if( inTrans->actor >= 0 && 
         ( inTrans->target > 0 || inTrans->target == -1 ) &&
         ( inTrans->newActor > 0 || inTrans->newTarget > 0 ) ) {
@@ -6797,6 +6820,10 @@ char *LivingLifePage::getHintMessage( int inObjectID, int inIndex ) {
             newActor > 0 ) {
             
             result = newActor;
+            }
+        else if( newTarget > 0 ) {
+            // don't show NOTHING as a result
+            result = newTarget;
             }
         
         char *actorString;
