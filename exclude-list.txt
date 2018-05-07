@@ -4,3 +4,5 @@
 /exclude-list.txt
 game.cpp
 LivingLifePage.cpp
+LivingLifePage.h
+/gameSource
