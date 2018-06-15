@@ -32,12 +32,14 @@
 
 #define NUM_HOME_ARROWS 8
 
+#define NUM_YUM_SLIPS 4
+
 // FOVMOD NOTE: change 1/1 - take those lines during merge process
 // Some global constants to make mod work.
 // You can change value of scale to anything you want.
 // Default scale of 1.5 brings game up to FullHD 1920x1080.
 namespace fovmod {
-    const float scale = 1.5;
+    const float scale = 3;
     const int gui_offset_x = (int)(((1280 * scale) - 1280)/2);
     const int gui_offset_y = (int)(((720 * scale) - 720)/2);
 }
@@ -94,6 +96,12 @@ typedef struct LiveObject {
         char lastHeldByRawPosSet;
         doublePair lastHeldByRawPos;
         
+        // track this so that we only send one jump message even if
+        // the player clicks more than once before the server registers the
+        // jump
+        char jumpOutOfArmsSent;
+        
+
         
         // usually 0, but used to slide into and out of riding position
         doublePair ridingOffset;
@@ -180,6 +188,9 @@ typedef struct LiveObject {
         int xd;
         int yd;
         
+        // true if xd,yd set based on a truncated PM from the server
+        char destTruncated;
+        
         
         // use a waypoint along the way during pathfinding.
         // path must pass through this point on its way to xd,yd
@@ -239,7 +250,13 @@ typedef struct LiveObject {
 
         char pendingAction;
         float pendingActionAnimationProgress;
+        float pendingActionAnimationTotalProgress;
         double pendingActionAnimationStartTime;
+        
+        double lastActionSendStartTime;
+        // how long it took server to get back to us with a PU last
+        // time we sent an action.  Most recent round-trip time
+        double lastResponseTimeDelta;
         
         
         // NULL if no active speech
@@ -261,6 +278,13 @@ typedef struct LiveObject {
     } LiveObject;
 
 
+
+
+typedef struct GraveInfo {
+        GridPos worldPos;
+        char *relationName;
+    } GraveInfo;
+        
 
 
 
@@ -442,7 +466,7 @@ class LivingLifePage : public GamePage {
         double *mMapAnimationLastFrameCount;
         
         double *mMapAnimationFrozenRotFrameCount;
-        
+        char *mMapAnimationFrozenRotFrameCountUsed;
 
         int *mMapFloorAnimationFrameCount;
 
@@ -636,6 +660,19 @@ class LivingLifePage : public GamePage {
                                     char inSkipBar,
                                     char inSkipDashes );
         
+        
+        int mYumBonus;
+        SimpleVector<int> mOldYumBonus;
+        SimpleVector<float> mOldYumBonusFades;
+
+        int mYumMultiplier;
+
+        SpriteHandle mYumSlipSprites[ NUM_YUM_SLIPS ];
+        int mYumSlipNumberToShow[ NUM_YUM_SLIPS ];
+        doublePair mYumSlipHideOffset[ NUM_YUM_SLIPS ];
+        doublePair mYumSlipPosOffset[ NUM_YUM_SLIPS ];
+        doublePair mYumSlipPosTargetOffset[ NUM_YUM_SLIPS ];
+        
 
         // the object that we're mousing over
         int mLastMouseOverID;
@@ -644,6 +681,9 @@ class LivingLifePage : public GamePage {
         
         GridPos mCurMouseOverSpot;
         char mCurMouseOverBehind;
+
+        GridPos mCurMouseOverWorld;
+
         
         char mCurMouseOverPerson;
         char mCurMouseOverSelf;
@@ -751,7 +791,9 @@ class LivingLifePage : public GamePage {
                               AnimType inType,
                               int inOldFrameCount, int inNewFrameCount,
                               double inPosX, double inPosY );
+        
 
+        SimpleVector<GraveInfo> mGraveInfo;
         
     };
 
