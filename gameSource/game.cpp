@@ -1,4 +1,4 @@
-int versionNumber = 110;
+int versionNumber = 125;
 int dataVersionNumber = 0;
 
 // NOTE that OneLife doesn't use account hmacs
@@ -78,6 +78,7 @@ CustomRandomSource randSource( 34957197 );
 #include "RebirthChoicePage.h"
 #include "SettingsPage.h"
 #include "ReviewPage.h"
+#include "TwinPage.h"
 //#include "TestPage.h"
 
 #include "ServerActionPage.h"
@@ -103,6 +104,9 @@ int serverPort = 0;
 
 char *userEmail = NULL;
 char *accountKey = NULL;
+char *userTwinCode = NULL;
+int userTwinCount = 0;
+
 
 // these are needed by ServerActionPage, but we don't use them
 int userID = 0;
@@ -121,6 +125,7 @@ ExtendedMessagePage *extendedMessagePage;
 RebirthChoicePage *rebirthChoicePage;
 SettingsPage *settingsPage;
 ReviewPage *reviewPage;
+TwinPage *twinPage;
 //TestPage *testPage = NULL;
 
 
@@ -605,6 +610,8 @@ void initFrameDrawer( int inWidth, int inHeight, int inTargetFrameRate,
     
     delete [] reviewURL;
 
+    twinPage = new TwinPage();
+
 
     // 0 music headroom needed, because we fade sounds before playing music
     setVolumeScaling( 10, 0 );
@@ -630,6 +637,9 @@ void initFrameDrawer( int inWidth, int inHeight, int inTargetFrameRate,
     if( loadingStepBatchSize < 1 ) {
         loadingStepBatchSize = 1;
         }
+
+    // for filter support in LivingLifePage
+    enableObjectSearch( true );
 
 
     currentGamePage = loadingPage;
@@ -685,6 +695,7 @@ void freeFrameDrawer() {
     delete rebirthChoicePage;
     delete settingsPage;
     delete reviewPage;
+    delete twinPage;
     
     //if( testPage != NULL ) {
     //    delete testPage;
@@ -724,6 +735,9 @@ void freeFrameDrawer() {
         }
     if( accountKey != NULL ) {
         delete [] accountKey;
+        }
+    if( userTwinCode != NULL ) {
+        delete [] userTwinCode;
         }
     }
 
@@ -1529,6 +1543,7 @@ void drawFrame( char inUpdate ) {
             }
         else if( currentGamePage == settingsPage ) {
             if( settingsPage->checkSignal( "back" ) ) {
+                existingAccountPage->setStatus( NULL, false );
                 currentGamePage = existingAccountPage;
                 currentGamePage->base_makeActive( true );
                 }
@@ -1543,8 +1558,19 @@ void drawFrame( char inUpdate ) {
             }
         else if( currentGamePage == reviewPage ) {
             if( reviewPage->checkSignal( "back" ) ) {
+                existingAccountPage->setStatus( NULL, false );
                 currentGamePage = existingAccountPage;
                 currentGamePage->base_makeActive( true );
+                }
+            }
+        else if( currentGamePage == twinPage ) {
+            if( twinPage->checkSignal( "cancel" ) ) {
+                existingAccountPage->setStatus( NULL, false );
+                currentGamePage = existingAccountPage;
+                currentGamePage->base_makeActive( true );
+                }
+            else if( twinPage->checkSignal( "done" ) ) {
+                startConnecting();
                 }
             }
         else if( currentGamePage == existingAccountPage ) {    
@@ -1559,6 +1585,10 @@ void drawFrame( char inUpdate ) {
                 currentGamePage = reviewPage;
                 currentGamePage->base_makeActive( true );
                 }
+            else if( existingAccountPage->checkSignal( "friends" ) ) {
+                currentGamePage = twinPage;
+                currentGamePage->base_makeActive( true );
+                }
             else if( existingAccountPage->checkSignal( "done" ) 
                      || 
                      mapPullMode || autoLogIn ) {
@@ -1567,6 +1597,13 @@ void drawFrame( char inUpdate ) {
                 // or one time for autoLogInMode
                 mapPullMode = false;
                 autoLogIn = false;
+                
+                // login button clears twin status
+                // they have to login from twin page to play as twin
+                if( userTwinCode != NULL ) {
+                    delete [] userTwinCode;
+                    userTwinCode = NULL;
+                    }
                 
                 startConnecting();
                 }
@@ -1711,6 +1748,20 @@ void drawFrame( char inUpdate ) {
 
                 currentGamePage->base_makeActive( true );
                 }
+            else if( livingLifePage->checkSignal( "twinCancel" ) ) {
+                
+                existingAccountPage->setStatus( NULL, false );
+
+                lastScreenViewCenter.x = 0;
+                lastScreenViewCenter.y = 0;
+
+                setViewCenterPosition( lastScreenViewCenter.x, 
+                                       lastScreenViewCenter.y );
+                
+                currentGamePage = existingAccountPage;
+                
+                currentGamePage->base_makeActive( true );
+                }
             else if( livingLifePage->checkSignal( "serverShutdown" ) ) {
                 lastScreenViewCenter.x = 0;
                 lastScreenViewCenter.y = 0;
@@ -1760,6 +1811,13 @@ void drawFrame( char inUpdate ) {
             if( rebirthChoicePage->checkSignal( "reborn" ) ) {
                 // get server address again from scratch, in case
                 // the server we were on just crashed
+                
+                // but keep twin status, if set
+                startConnecting();
+                }
+            else if( rebirthChoicePage->checkSignal( "tutorial" ) ) {
+                livingLifePage->runTutorial();
+                // heck, allow twins in tutorial too, for now, it's funny
                 startConnecting();
                 }
             else if( rebirthChoicePage->checkSignal( "review" ) ) {

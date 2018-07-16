@@ -39,7 +39,7 @@
 // You can change value of scale to anything you want.
 // Default scale of 1.5 brings game up to FullHD 1920x1080.
 namespace fovmod {
-    const float scale = 3;
+    const float scale = 1.5;
     const int gui_offset_x = (int)(((1280 * scale) - 1280)/2);
     const int gui_offset_y = (int)(((720 * scale) - 720)/2);
 }
@@ -69,6 +69,10 @@ typedef struct LiveObject {
 
         char *relationName;
         
+        int curseLevel;
+        
+        int curseTokenCount;
+        
 
         // roll back age temporarily to make baby revert to crying
         // when baby speaks
@@ -87,6 +91,12 @@ typedef struct LiveObject {
         // by an adult
         int heldByAdultID;
         
+        // -1 if not set
+        // otherwise, ID of adult that is holding us according to pending
+        // messages, but not according to already-played messages
+        int heldByAdultPendingID;
+        
+
         // usually 0, unless we're being held by an adult
         // and just got put down
         // then we slide back into position
@@ -265,6 +275,8 @@ typedef struct LiveObject {
         // wall clock time when speech should start fading
         double speechFadeETATime;
 
+        char speechIsSuccessfulCurse;
+        
 
         char shouldDrawPathMarks;
         double pathMarkFade;
@@ -377,7 +389,10 @@ class LivingLifePage : public GamePage {
         ~LivingLifePage();
         
         void clearMap();
-
+        
+        // enabled tutorail next time a connection loads
+        void runTutorial();
+        
 
         char isMapBeingPulled();
 
@@ -424,6 +439,9 @@ class LivingLifePage : public GamePage {
         int mServerSocket;
         
         int mRequiredVersion;
+
+        char mForceRunTutorial;
+        int mTutorialNumber;
 
         int mFirstServerMessagesReceived;
         
@@ -550,6 +568,9 @@ class LivingLifePage : public GamePage {
         
         HomeArrow mHomeArrowStates[ NUM_HOME_ARROWS ];
         
+        SimpleVector<char*> mPreviousHomeDistStrings;
+        SimpleVector<float> mPreviousHomeDistFades;
+        
 
         // offset from current view center
         doublePair mNotePaperHideOffset;
@@ -576,6 +597,10 @@ class LivingLifePage : public GamePage {
         
         SoundSpriteHandle mHungerSound;
         char mPulseHungerSound;
+
+        SoundSpriteHandle mTutorialSound;
+        SoundSpriteHandle mCurseSound;
+
         
         SpriteHandle mHungerSlipSprites[3];
 
@@ -614,6 +639,8 @@ class LivingLifePage : public GamePage {
 
         int mLiveHintSheetIndex;
 
+        char mForceHintRefresh;
+        
         int mCurrentHintObjectID;
         int mCurrentHintIndex;
         
@@ -622,13 +649,38 @@ class LivingLifePage : public GamePage {
 
         SimpleVector<TransRecord *> mLastHintSortedList;
         int mLastHintSortedSourceID;
+        char *mLastHintFilterString;
         
+        // string that's waiting to be shown on hint-sheet 4
+        char *mPendingFilterString;
+        
+
         // table sized to number of possible objects
         int *mHintBookmarks;
         
 
         int getNumHints( int inObjectID );
         char *getHintMessage( int inObjectID, int inIndex );
+
+        char *mHintFilterString;
+        
+
+        
+        // offset from current view center
+        doublePair mTutorialHideOffset[NUM_HINT_SHEETS];
+        doublePair mTutorialPosOffset[NUM_HINT_SHEETS];
+        doublePair mTutorialTargetOffset[NUM_HINT_SHEETS];
+
+        doublePair mTutorialExtraOffset[NUM_HINT_SHEETS];
+
+        // # separates lines
+        const char *mTutorialMessage[NUM_HINT_SHEETS];
+
+        char mTutorialFlips[NUM_HINT_SHEETS];
+
+        int mLiveTutorialSheetIndex;
+        int mLiveTutorialTriggerNumber;
+
 
 
         // -1 if outside bounds of locally stored map
